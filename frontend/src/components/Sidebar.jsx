@@ -123,19 +123,12 @@ export default function Sidebar({ active, onChange, empresaNome, logoUrl }) {
         borderTop: '1px solid rgba(255,255,255,0.05)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{
-            width: 26, height: 26, borderRadius: 7,
-            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center'
-          }}>
-            <ChartBar size={13} weight="bold" color="#fff" />
-          </div>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: '#94a3b8', lineHeight: 1 }}>
-              <span style={{ color: '#8b5cf6' }}>bah</span>tech
-            </div>
-            <div style={{ fontSize: 9, color: '#334155', fontWeight: 500 }}>RFV Analytics v1.0</div>
-          </div>
+          <img
+            src="/logo-bahtech.png"
+            alt="Bahtech"
+            style={{ height: 24, objectFit: 'contain' }}
+          />
+          <div style={{ fontSize: 9, color: '#334155', fontWeight: 500 }}>RFV Analytics v1.0</div>
         </div>
       </div>
     </div>
