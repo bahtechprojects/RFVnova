@@ -1,7 +1,10 @@
 node_modules/
 __pycache__/
 *.pyc
+*.log
 .env
 webapp/data/
+frontend/dist/
 rfv-dashboard/frontend/dist/
+backend/data/*.json
 .claude/

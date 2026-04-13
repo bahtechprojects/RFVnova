@@ -1,0 +1,14 @@
+{
+  "name": "rfv-dashboard-backend",
+  "version": "1.0.0",
+  "description": "API Backend - Dashboard RFV Nova Automação",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2"
+  }
+}
