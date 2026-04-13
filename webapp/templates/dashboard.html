@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RFV - {{ data.empresa_nome }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #3b82f6;
+        }
+        .header h1 { font-size: 22px; color: #fff; }
+        .header h1 span { color: #3b82f6; }
+        .header .empresa-name { font-size: 14px; color: #94a3b8; margin-top: 4px; }
+        .header .meta { text-align: right; font-size: 12px; color: #94a3b8; }
+        .header a { color: #3b82f6; text-decoration: none; font-size: 13px; }
+        .header a:hover { text-decoration: underline; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
+        }
+        .kpi-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            border: 1px solid #334155;
+        }
+        .kpi-value { font-size: 26px; font-weight: 700; color: #fff; margin: 6px 0 4px; }
+        .kpi-label { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-card.blue .kpi-value { color: #3b82f6; }
+        .kpi-card.green .kpi-value { color: #22c55e; }
+        .kpi-card.yellow .kpi-value { color: #eab308; }
+        .kpi-card.red .kpi-value { color: #ef4444; }
+        .kpi-card.purple .kpi-value { color: #a855f7; }
+
+        .section {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 22px;
+            margin-bottom: 22px;
+            border: 1px solid #334155;
+        }
+        .section h2 {
+            font-size: 17px;
+            margin-bottom: 14px;
+            color: #fff;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+
+        .seg-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 12px;
+        }
+        .seg-card {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 14px;
+        }
+        .seg-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+        .seg-icon { font-size: 20px; }
+        .seg-name { font-weight: 600; font-size: 14px; }
+        .seg-stats { display: flex; gap: 20px; }
+        .seg-stat { display: flex; flex-direction: column; }
+        .seg-num { font-weight: 700; font-size: 15px; color: #fff; }
+        .seg-label { font-size: 11px; color: #94a3b8; }
+
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+            margin-bottom: 22px;
+        }
+        @media (max-width: 900px) { .charts-row { grid-template-columns: 1fr; } }
+
+        table { width: 100%; border-collapse: collapse; }
+        th {
+            background: #334155;
+            color: #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        td { padding: 8px 12px; border-bottom: 1px solid #1e293b; font-size: 12px; }
+        tr:hover { background: rgba(59,130,246,0.05); }
+        .rfv-badge {
+            background: #3b82f6;
+            color: #fff;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 12px;
+        }
+        .seg-tag {
+            color: #fff;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .tab-bar { display: flex; gap: 8px; margin-bottom: 16px; }
+        .tab-btn {
+            background: #334155;
+            color: #94a3b8;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .tab-btn.active { background: #3b82f6; color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .btn {
+            background: #3b82f6; color: #fff; border: none;
+            padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px;
+        }
+        .btn:hover { background: #2563eb; }
+
+        .dataTables_wrapper { color: #e2e8f0; }
+        .dataTables_filter input {
+            background: #0f172a; border: 1px solid #475569;
+            color: #e2e8f0; padding: 6px 12px; border-radius: 6px;
+        }
+        .dataTables_length select {
+            background: #0f172a; border: 1px solid #475569;
+            color: #e2e8f0; padding: 4px; border-radius: 4px;
+        }
+        .dataTables_info, .dataTables_length label, .dataTables_filter label {
+            color: #94a3b8 !important; font-size: 12px;
+        }
+        .dataTables_paginate .paginate_button {
+            color: #e2e8f0 !important; border: 1px solid #475569 !important;
+            background: #1e293b !important; border-radius: 4px; margin: 0 2px;
+        }
+        .dataTables_paginate .paginate_button.current {
+            background: #3b82f6 !important; color: #fff !important; border-color: #3b82f6 !important;
+        }
+        .dataTables_paginate .paginate_button:hover {
+            background: #334155 !important; color: #fff !important;
+        }
+
+        .rfv-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 8px; margin-top: 12px; padding: 14px;
+            background: #0f172a; border-radius: 8px;
+        }
+        .rfv-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .rfv-legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+        @media print {
+            body { background: #fff; color: #000; }
+            .header { background: #f1f5f9; border-color: #3b82f6; }
+            .section, .kpi-card { background: #fff; border-color: #e2e8f0; }
+            .seg-card { background: #f8fafc; }
+            th { background: #e2e8f0; color: #000; }
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <h1>Dashboard <span>RFV</span></h1>
+            <div class="empresa-name">{{ data.empresa_nome }}</div>
+        </div>
+        <div class="meta">
+            <a href="/">&larr; Voltar</a><br>
+            <span>Dados de: {{ data.generated_at[:16] if data.generated_at else 'N/A' }}</span><br>
+            <button class="btn no-print" onclick="window.print()" style="margin-top:6px;">Imprimir</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- KPIs -->
+        <div class="kpi-row">
+            <div class="kpi-card blue">
+                <div class="kpi-label">Clientes Ativos</div>
+                <div class="kpi-value">{{ data.resumo.clientes_ativos }}</div>
+                <div class="kpi-label">de {{ data.resumo.total_cadastrados }} cadastrados</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-label">Faturamento Total</div>
+                <div class="kpi-value">R$ {{ "{:,.2f}".format(data.resumo.total_valor) }}</div>
+            </div>
+            <div class="kpi-card purple">
+                <div class="kpi-label">Total de Pedidos</div>
+                <div class="kpi-value">{{ "{:,}".format(data.resumo.total_pedidos) }}</div>
+            </div>
+            <div class="kpi-card yellow">
+                <div class="kpi-label">Recência Média</div>
+                <div class="kpi-value">{{ data.resumo.recencia_media }} dias</div>
+            </div>
+            <div class="kpi-card red">
+                <div class="kpi-label">Clientes Inativos</div>
+                <div class="kpi-value">{{ data.resumo.clientes_inativos }}</div>
+            </div>
+        </div>
+
+        <!-- Segmentos -->
+        <div class="section">
+            <h2>Segmentação de Clientes</h2>
+            <div class="seg-grid">
+                {% for seg in data.segmentos %}
+                <div class="seg-card" style="border-left: 4px solid {{ seg.color }}">
+                    <div class="seg-header">
+                        <span class="seg-icon">{{ seg.icon }}</span>
+                        <span class="seg-name">{{ seg.nome }}</span>
+                    </div>
+                    <div class="seg-stats">
+                        <div class="seg-stat">
+                            <span class="seg-num">{{ seg.count }}</span>
+                            <span class="seg-label">clientes ({{ seg.pct_count }}%)</span>
+                        </div>
+                        <div class="seg-stat">
+                            <span class="seg-num">R$ {{ "{:,.2f}".format(seg.valor) }}</span>
+                            <span class="seg-label">faturamento ({{ seg.pct_valor }}%)</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <div class="rfv-legend">
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#22c55e"></div><b>Campeões</b> — Recente, frequente, alto valor</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#3b82f6"></div><b>Leais</b> — Recente e boa frequência</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#06b6d4"></div><b>Potenciais Leais</b> — Bons em R, F e V</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#a855f7"></div><b>Novos</b> — Recente mas poucas compras</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#eab308"></div><b>Precisam Atenção</b> — Podem evadir</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#f97316"></div><b>Em Risco</b> — Bons clientes que sumiram</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#ef4444"></div><b>Não Pode Perder</b> — Alta frequência, recência ruim</div>
+                <div class="rfv-legend-item"><div class="rfv-legend-dot" style="background:#6b7280"></div><b>Hibernando</b> — Sem compras há muito tempo</div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="charts-row">
+            <div class="section">
+                <h2>Distribuição por Segmento</h2>
+                <canvas id="chartSegmentos" height="300"></canvas>
+            </div>
+            <div class="section">
+                <h2>Faturamento por Segmento</h2>
+                <canvas id="chartValor" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="section">
+            <div class="tab-bar no-print">
+                <button class="tab-btn active" onclick="switchTab(this, 'top')">Top 20 Clientes</button>
+                <button class="tab-btn" onclick="switchTab(this, 'risco')">Clientes em Risco</button>
+                <button class="tab-btn" onclick="switchTab(this, 'todos')">Todos os Clientes</button>
+            </div>
+
+            <div id="tab-top" class="tab-content active">
+                <h2>Top 20 Clientes por Valor</h2>
+                <table>
+                    <thead>
+                        <tr><th>#</th><th>Cliente</th><th>Última Compra</th><th>Pedidos</th><th>Valor Total</th><th>RFV</th><th>Segmento</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in data.top_clientes[:20] %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{{ c.nome }}</td>
+                            <td>{{ c.data_ult_compra }}</td>
+                            <td>{{ c.frequencia }}</td>
+                            <td>R$ {{ "{:,.2f}".format(c.valor) }}</td>
+                            <td><span class="rfv-badge">{{ c.rfv_code }}</span></td>
+                            <td><span class="seg-tag" style="background:{{ c.seg_color }}">{{ c.segmento }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="tab-risco" class="tab-content">
+                <h2>Clientes em Risco (Alto Valor + Recência Ruim)</h2>
+                {% if data.clientes_risco %}
+                <table>
+                    <thead>
+                        <tr><th>Cliente</th><th>Última Compra</th><th>Recência</th><th>Pedidos</th><th>Valor Total</th><th>Segmento</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for c in data.clientes_risco %}
+                        <tr>
+                            <td>{{ c.nome }}</td>
+                            <td>{{ c.data_ult_compra }}</td>
+                            <td>{{ c.recencia_dias }} dias</td>
+                            <td>{{ c.frequencia }}</td>
+                            <td>R$ {{ "{:,.2f}".format(c.valor) }}</td>
+                            <td><span class="seg-tag" style="background:{{ c.seg_color }}">{{ c.segmento }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <p style="color:#94a3b8;">Nenhum cliente em risco identificado.</p>
+                {% endif %}
+            </div>
+
+            <div id="tab-todos" class="tab-content">
+                <h2>Todos os Clientes</h2>
+                <table id="tabelaCompleta" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th><th>Cliente</th><th>Última Compra</th><th>Recência</th>
+                            <th>Pedidos</th><th>Valor Total</th><th>R</th><th>F</th><th>V</th>
+                            <th>Score</th><th>RFV</th><th>Segmento</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+
+        <!-- Metodologia -->
+        <div class="section" style="font-size:12px;color:#94a3b8;">
+            <h2>Metodologia RFV</h2>
+            <p style="margin-bottom:8px;">Cada cliente recebe score 1-5 por quintis:</p>
+            <ul style="margin-left:20px;line-height:2;">
+                <li><b>R (Recência)</b> — Dias desde última compra. Menor = melhor (5).</li>
+                <li><b>F (Frequência)</b> — Qtd pedidos. Maior = melhor (5).</li>
+                <li><b>V (Valor)</b> — Valor total. Maior = melhor (5).</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function switchTab(btn, tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            btn.classList.add('active');
+            if (tab === 'todos' && !window.dtInit) {
+                initDT();
+                window.dtInit = true;
+            }
+        }
+
+        // DataTable
+        const allClients = {{ data.clientes | tojson }};
+        function initDT() {
+            const dtData = allClients.map(c => [
+                c.id, c.nome, c.data_ult_compra,
+                c.recencia_dias < 9999 ? c.recencia_dias : '-',
+                c.frequencia,
+                'R$ ' + c.valor.toLocaleString('pt-BR', {minimumFractionDigits: 2}),
+                c.r_score, c.f_score, c.v_score,
+                c.rfv_score, c.rfv_code, c.segmento
+            ]);
+            $('#tabelaCompleta').DataTable({
+                data: dtData,
+                language: {
+                    search: "Buscar:", lengthMenu: "Mostrar _MENU_",
+                    info: "_START_ a _END_ de _TOTAL_",
+                    paginate: { next: "Prox", previous: "Ant" },
+                    zeroRecords: "Nenhum encontrado"
+                },
+                pageLength: 25,
+                order: [[9, 'desc']],
+                columnDefs: [{ targets: [6,7,8,9], className: 'dt-center' }]
+            });
+        }
+
+        // Charts data
+        const segData = {{ data.segmentos | tojson }};
+        const segLabels = segData.map(s => s.nome);
+        const segCounts = segData.map(s => s.count);
+        const segColors = segData.map(s => s.color);
+        const segValores = segData.map(s => s.valor);
+
+        new Chart(document.getElementById('chartSegmentos'), {
+            type: 'doughnut',
+            data: {
+                labels: segLabels,
+                datasets: [{ data: segCounts, backgroundColor: segColors, borderColor: '#1e293b', borderWidth: 2 }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0', padding: 10, font: { size: 11 } } } }
+            }
+        });
+
+        new Chart(document.getElementById('chartValor'), {
+            type: 'bar',
+            data: {
+                labels: segLabels,
+                datasets: [{ label: 'R$', data: segValores, backgroundColor: segColors, borderRadius: 6 }]
+            },
+            options: {
+                responsive: true,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { ticks: { color: '#94a3b8', callback: v => 'R$ ' + v.toLocaleString('pt-BR') }, grid: { color: '#334155' } },
+                    y: { ticks: { color: '#e2e8f0', font: { size: 11 } }, grid: { display: false } }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

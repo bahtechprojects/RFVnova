@@ -1,0 +1,11 @@
+.star-border-container {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.star-border-content {
+  position: relative;
+  border-radius: inherit;
+  z-index: 1;
+}
