@@ -13,10 +13,17 @@ if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
-// Serve o frontend em produção
+// Serve o frontend em produção (sem cache no HTML para garantir atualizações)
 const publicDir = path.join(__dirname, 'public');
 const distDir = path.join(__dirname, '../frontend/dist');
-app.use(express.static(fs.existsSync(publicDir) ? publicDir : distDir));
+const staticDir = fs.existsSync(publicDir) ? publicDir : distDir;
+app.use(express.static(staticDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 const API_TOKEN = 'nova-automacao-rfv-token-2026';
 
@@ -89,6 +96,7 @@ app.get('*', (req, res) => {
   const distIndex = path.join(__dirname, '../frontend/dist/index.html');
   const indexPath = fs.existsSync(pubIndex) ? pubIndex : distIndex;
   if (fs.existsSync(indexPath)) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(indexPath);
   } else {
     res.json({ message: 'API RFV Dashboard rodando. Frontend não buildado ainda.' });
