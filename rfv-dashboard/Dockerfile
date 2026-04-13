@@ -1,17 +1,19 @@
-FROM node:20-alpine AS frontend-build
-WORKDIR /app/frontend
-COPY frontend/package*.json ./
-RUN npm install
-COPY frontend/ ./
-ARG CACHEBUST=1
-RUN npm run build
-
 FROM node:20-alpine
+
 WORKDIR /app
+
+# Backend
 COPY backend/package*.json ./
-RUN npm install --production
+RUN npm install --omit=dev
+
 COPY backend/ ./
-COPY --from=frontend-build /app/frontend/dist ./public
+
+# Frontend - build dentro do mesmo estágio para evitar cache
+COPY frontend/ ./frontend-src/
+RUN cd frontend-src && npm install && npm run build && \
+    cp -r dist ../public && \
+    cd .. && rm -rf frontend-src
+
 RUN mkdir -p /app/data
 
 ENV NODE_ENV=production
