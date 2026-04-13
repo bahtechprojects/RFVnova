@@ -115,9 +115,8 @@ export default function Sidebar({ active, onChange, empresaNome, onLogout }) {
         flexDirection: 'column',
         gap: 10
       }}>
-        {onLogout && (
-          <button
-            onClick={onLogout}
+        <a
+            href="/logout"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -140,8 +139,7 @@ export default function Sidebar({ active, onChange, empresaNome, onLogout }) {
           >
             <SignOut size={18} weight="regular" color="#dc2626" />
             Sair
-          </button>
-        )}
+          </a>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px' }}>
           <img
             src="/logo-bahtech.png"
