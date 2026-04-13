@@ -3,6 +3,7 @@ WORKDIR /app/frontend
 COPY frontend/package*.json ./
 RUN npm install
 COPY frontend/ ./
+ARG CACHEBUST=1
 RUN npm run build
 
 FROM node:20-alpine
