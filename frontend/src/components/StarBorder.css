@@ -1,42 +1,11 @@
 .star-border-container {
   position: relative;
-  border-radius: 16px;
+  border-radius: 14px;
   overflow: hidden;
-  padding: 1px;
-}
-
-.star-border-glow {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  overflow: hidden;
-}
-
-.star-border-glow::before {
-  content: '';
-  position: absolute;
-  inset: -150%;
-  background: conic-gradient(
-    from 0deg,
-    transparent 0%,
-    var(--star-color, #8b5cf6) 10%,
-    transparent 20%,
-    transparent 50%,
-    var(--star-color, #8b5cf6) 60%,
-    transparent 70%,
-    transparent 100%
-  );
-  animation: star-rotate var(--star-speed, 6s) linear infinite;
 }
 
 .star-border-content {
   position: relative;
-  background: linear-gradient(145deg, rgba(15, 22, 40, 0.95), rgba(10, 14, 26, 0.98));
   border-radius: inherit;
   z-index: 1;
-}
-
-@keyframes star-rotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
 }

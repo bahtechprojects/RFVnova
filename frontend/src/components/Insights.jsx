@@ -1,10 +1,11 @@
-import { motion } from 'framer-motion'
-import { Lightbulb, Target, Warning, Rocket, HandCoins, Megaphone, ArrowRight } from '@phosphor-icons/react'
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Lightbulb, Target, Warning, Rocket, HandCoins, Megaphone, ArrowRight, CaretDown, CaretUp, Copy } from '@phosphor-icons/react'
 
 export default function Insights({ resumo, segmentos, clientes }) {
   if (!resumo || !segmentos) return null
+  const [expandedIndex, setExpandedIndex] = useState(null)
 
-  const total = resumo.clientes_ativos || 1
   const campeoes = segmentos.find(s => s.nome === 'Campeões')
   const novos = segmentos.find(s => s.nome === 'Novos')
   const risco = segmentos.find(s => s.nome === 'Em Risco')
@@ -12,149 +13,166 @@ export default function Insights({ resumo, segmentos, clientes }) {
   const hibernando = segmentos.find(s => s.nome === 'Hibernando')
   const precisam = segmentos.find(s => s.nome === 'Precisam Atenção')
 
+  const getClientesBySegmento = (...nomes) =>
+    (clientes || []).filter(c => nomes.includes(c.segmento)).sort((a, b) => (b.valor || 0) - (a.valor || 0))
+
   const insights = []
 
   if (campeoes && campeoes.count > 0) {
-    insights.push({
-      icon: Rocket, color: '#22c55e',
-      title: `${campeoes.count} Campeoes geram ${campeoes.pct_valor}% do faturamento`,
-      desc: `Representam apenas ${campeoes.pct_count}% da base mas contribuem com R$ ${(campeoes.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} em vendas.`,
-      action: 'Criar programa VIP, oferecer condicoes exclusivas e priorizar atendimento.'
-    })
+    insights.push({ icon: Rocket, color: '#16a34a', bg: '#f0fdf4', border: '#bbf7d0',
+      title: `${campeoes.count} Campeões geram ${campeoes.pct_valor}% do faturamento`,
+      desc: `Representam ${campeoes.pct_count}% da base com R$ ${(campeoes.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}.`,
+      action: 'Programa VIP, condições exclusivas e priorizar atendimento.',
+      clientes: getClientesBySegmento('Campeões'), valorTotal: campeoes.valor || 0 })
   }
-
   if (novos && novos.count > 0 && novos.pct_count > 30) {
-    insights.push({
-      icon: Target, color: '#a855f7',
+    insights.push({ icon: Target, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
       title: `${novos.count} clientes Novos (${novos.pct_count}% da base)`,
-      desc: `Grande volume de clientes com poucas compras. Oportunidade de converter em recorrentes.`,
-      action: 'Fluxo de boas-vindas, desconto na 2a compra e follow-up em 15 dias.'
-    })
+      desc: 'Oportunidade de converter em recorrentes.',
+      action: 'Boas-vindas, desconto na 2ª compra, follow-up em 15 dias.',
+      clientes: getClientesBySegmento('Novos'), valorTotal: novos.valor || 0 })
   }
-
   if (hibernando && hibernando.count > 0) {
-    insights.push({
-      icon: Warning, color: '#f97316',
-      title: `${hibernando.count} clientes Hibernando (R$ ${(hibernando.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} parados)`,
-      desc: `${hibernando.pct_count}% da base sem comprar ha muito tempo. Receita potencial perdida.`,
-      action: 'Campanha de reativacao com oferta especial ou visita tecnica.'
-    })
+    insights.push({ icon: Warning, color: '#ea580c', bg: '#fff7ed', border: '#fed7aa',
+      title: `${hibernando.count} Hibernando (R$ ${(hibernando.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })} parados)`,
+      desc: `${hibernando.pct_count}% da base sem comprar há muito tempo.`,
+      action: 'Campanha de reativação com oferta especial.',
+      clientes: getClientesBySegmento('Hibernando'), valorTotal: hibernando.valor || 0 })
   }
-
   const emRiscoTotal = (risco?.count || 0) + (naoPodePerder?.count || 0)
   const emRiscoValor = (risco?.valor || 0) + (naoPodePerder?.valor || 0)
   if (emRiscoTotal > 0) {
-    insights.push({
-      icon: HandCoins, color: '#ef4444',
+    insights.push({ icon: HandCoins, color: '#dc2626', bg: '#fef2f2', border: '#fecaca',
       title: `${emRiscoTotal} clientes de alto valor em risco (R$ ${emRiscoValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
-      desc: `Clientes que compravam frequentemente e pararam. Cada dia sem acao aumenta a chance de perder.`,
-      action: 'ACAO IMEDIATA: Contato direto pelo gerente comercial.'
-    })
+      desc: 'Compravam frequentemente e pararam. Cada dia sem ação aumenta o risco.',
+      action: 'AÇÃO IMEDIATA: Contato direto pelo comercial.',
+      clientes: getClientesBySegmento('Em Risco', 'Não Pode Perder'), valorTotal: emRiscoValor })
   }
-
   if (precisam && precisam.count > 0) {
-    insights.push({
-      icon: Megaphone, color: '#eab308',
-      title: `${precisam.count} clientes Precisam de Atencao`,
-      desc: `Clientes no limite entre ficar ativos ou cair para hibernacao.`,
-      action: 'Comunicacao personalizada, novos produtos e visita comercial.'
-    })
+    insights.push({ icon: Megaphone, color: '#ca8a04', bg: '#fefce8', border: '#fde68a',
+      title: `${precisam.count} clientes Precisam de Atenção`,
+      desc: 'No limite entre ficar ativos ou cair para hibernação.',
+      action: 'Comunicação personalizada e visita comercial.',
+      clientes: getClientesBySegmento('Precisam Atenção'), valorTotal: precisam.valor || 0 })
   }
 
-  if (resumo.recencia_media > 365) {
-    insights.push({
-      icon: Lightbulb, color: '#06b6d4',
-      title: `Recencia media de ${resumo.recencia_media} dias — acima do ideal`,
-      desc: `Para B2B saudavel, o ideal e manter abaixo de 180 dias.`,
-      action: 'Revisar ciclo de compra, lembretes automaticos e ofertas periodicas.'
-    })
+  const upsellCandidates = (clientes || []).filter(c => c.f_score >= 4 && c.v_score <= 2).sort((a, b) => b.frequencia - a.frequencia).slice(0, 15)
+  if (upsellCandidates.length >= 3) {
+    insights.push({ icon: Rocket, color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe',
+      title: `${upsellCandidates.length} oportunidades de upsell`,
+      desc: 'Alta frequência mas ticket baixo — potencial para aumentar valor.',
+      action: 'Produtos premium, combos ou condições para pedidos maiores.',
+      clientes: upsellCandidates, valorTotal: upsellCandidates.reduce((a, c) => a + (c.valor || 0), 0) })
   }
+
+  const copyClientList = (list) => {
+    const text = list.map(c => `${c.nome}\t${c.data_ult_compra || '-'}\t${c.frequencia}\tR$ ${(c.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`).join('\n')
+    navigator.clipboard.writeText(`Nome\tÚltima Compra\tPedidos\tValor\n${text}`)
+  }
+
+  const totalClientes = insights.reduce((a, ins) => a + (ins.clientes?.length || 0), 0)
+  const valorOportunidades = insights.filter(i => ['#16a34a', '#2563eb'].includes(i.color)).reduce((a, i) => a + (i.valorTotal || 0), 0)
+  const valorEmRisco = insights.filter(i => ['#dc2626', '#ea580c', '#ca8a04'].includes(i.color)).reduce((a, i) => a + (i.valorTotal || 0), 0)
 
   return (
-    <motion.div
-      initial={{ y: 20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.15 }}
-      style={{
-        background: 'linear-gradient(145deg, rgba(15, 22, 40, 0.9), rgba(12, 17, 32, 0.9))',
-        backdropFilter: 'blur(20px)',
-        borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.06)',
-        padding: 28, position: 'relative', overflow: 'hidden'
-      }}
-    >
-      <div style={{
-        position: 'absolute', top: -1, left: '10%', right: '10%', height: 1,
-        background: 'linear-gradient(90deg, transparent, rgba(234, 179, 8, 0.3), transparent)'
-      }} />
+    <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
+      style={{ background: '#fff', borderRadius: 16, border: '1px solid #e2e8f0', padding: 28 }}>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24 }}>
-        <div style={{
-          width: 34, height: 34, borderRadius: 10,
-          background: 'rgba(234, 179, 8, 0.1)',
-          border: '1px solid rgba(234, 179, 8, 0.2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center'
-        }}>
-          <Lightbulb size={18} weight="bold" color="#eab308" />
-        </div>
-        <h2 style={{ fontSize: 17, fontWeight: 800, color: '#fff', letterSpacing: -0.3 }}>
-          Insights e Recomendacoes
-        </h2>
-        <span style={{
-          fontSize: 11, fontWeight: 700, color: '#eab308',
-          background: 'rgba(234, 179, 8, 0.1)',
-          border: '1px solid rgba(234, 179, 8, 0.2)',
-          padding: '3px 10px', borderRadius: 20, marginLeft: 'auto'
-        }}>
-          {insights.length} acoes
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <Lightbulb size={20} weight="bold" color="#ca8a04" />
+        <h2 style={{ fontSize: 17, fontWeight: 700, color: '#1e293b' }}>Insights e Recomendações</h2>
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#ca8a04', background: '#fefce8', border: '1px solid #fde68a', padding: '3px 10px', borderRadius: 20, marginLeft: 'auto' }}>
+          {insights.length} ações
         </span>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        {insights.map((insight, i) => {
-          const Icon = insight.icon
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+        <div style={{ background: '#f8fafc', borderRadius: 10, padding: '12px 14px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Clientes envolvidos</div>
+          <div style={{ fontSize: 20, fontWeight: 700, color: '#1e293b' }}>{totalClientes}</div>
+        </div>
+        <div style={{ background: '#f0fdf4', borderRadius: 10, padding: '12px 14px', border: '1px solid #bbf7d0', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#16a34a', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Oportunidades</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#16a34a' }}>R$ {valorOportunidades.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</div>
+        </div>
+        <div style={{ background: '#fef2f2', borderRadius: 10, padding: '12px 14px', border: '1px solid #fecaca', textAlign: 'center' }}>
+          <div style={{ fontSize: 10, color: '#dc2626', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Valor em risco</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#dc2626' }}>R$ {valorEmRisco.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}</div>
+        </div>
+      </div>
+
+      <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 14 }}>Clique em cada insight para ver os clientes envolvidos</p>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {insights.map((ins, i) => {
+          const Icon = ins.icon
+          const isExpanded = expandedIndex === i
           return (
-            <motion.div
-              key={i}
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.2 + i * 0.08 }}
-              style={{
-                background: 'rgba(6, 9, 18, 0.5)',
-                borderRadius: 16,
-                padding: '20px 24px',
-                border: '1px solid rgba(255,255,255,0.04)',
-                borderLeft: `3px solid ${insight.color}`
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-                <div style={{
-                  width: 40, height: 40, borderRadius: 12, flexShrink: 0,
-                  background: `${insight.color}10`,
-                  border: `1px solid ${insight.color}20`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center'
-                }}>
-                  <Icon size={18} weight="bold" color={insight.color} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 800, color: '#fff', marginBottom: 6, letterSpacing: -0.2 }}>
-                    {insight.title}
+            <motion.div key={i} initial={{ x: -10, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.1 + i * 0.06 }}>
+              <div onClick={() => setExpandedIndex(isExpanded ? null : i)}
+                style={{ background: ins.bg, borderRadius: isExpanded ? '12px 12px 0 0' : 12, padding: '18px 20px', border: `1px solid ${ins.border}`, borderLeft: `3px solid ${ins.color}`, cursor: 'pointer' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: '#fff', border: `1px solid ${ins.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={16} weight="bold" color={ins.color} />
                   </div>
-                  <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7, marginBottom: 10 }}>
-                    {insight.desc}
-                  </div>
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    fontSize: 12, fontWeight: 600, color: insight.color,
-                    background: `${insight.color}08`,
-                    padding: '8px 14px', borderRadius: 8,
-                    border: `1px solid ${insight.color}12`
-                  }}>
-                    <ArrowRight size={12} weight="bold" />
-                    {insight.action}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: '#1e293b', marginBottom: 4 }}>{ins.title}</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#94a3b8', fontSize: 11 }}>
+                        {ins.clientes.length > 0 && <span>{ins.clientes.length} clientes</span>}
+                        {isExpanded ? <CaretUp size={12} weight="bold" /> : <CaretDown size={12} weight="bold" />}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#475569', lineHeight: 1.6, marginBottom: 8 }}>{ins.desc}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, color: ins.color, background: '#fff', padding: '6px 12px', borderRadius: 6, border: `1px solid ${ins.border}` }}>
+                      <ArrowRight size={11} weight="bold" /> {ins.action}
+                    </div>
                   </div>
                 </div>
               </div>
+
+              <AnimatePresence>
+                {isExpanded && ins.clientes.length > 0 && (
+                  <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
+                    <div style={{ background: '#fff', borderRadius: '0 0 12px 12px', padding: '14px 20px 18px', borderLeft: `3px solid ${ins.color}`, borderRight: `1px solid ${ins.border}`, borderBottom: `1px solid ${ins.border}` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#64748b' }}>Clientes ({ins.clientes.length})</span>
+                        <button onClick={(e) => { e.stopPropagation(); copyClientList(ins.clientes) }}
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 6, padding: '5px 10px', color: '#64748b', cursor: 'pointer', fontSize: 11, fontWeight: 600, fontFamily: 'Inter' }}>
+                          <Copy size={11} weight="bold" /> Copiar
+                        </button>
+                      </div>
+                      <div style={{ borderRadius: 8, border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                          <thead>
+                            <tr>
+                              {['Cliente', 'Última Compra', 'Pedidos', 'Valor', 'Segmento'].map(h => (
+                                <th key={h} style={{ background: '#f8fafc', color: '#94a3b8', padding: '8px 12px', textAlign: 'left', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', borderBottom: '1px solid #e2e8f0' }}>{h}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {ins.clientes.slice(0, 20).map((c, ci) => (
+                              <tr key={c.id || ci} style={{ transition: 'background 0.15s' }}
+                                onMouseEnter={e => e.currentTarget.style.background = '#f8fafc'}
+                                onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+                                <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontWeight: 600, color: '#1e293b', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.nome}</td>
+                                <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', color: '#64748b' }}>{c.data_ult_compra || '-'}</td>
+                                <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', textAlign: 'center', color: '#64748b' }}>{c.frequencia}</td>
+                                <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9', fontWeight: 700, color: '#16a34a' }}>R$ {(c.valor || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                <td style={{ padding: '8px 12px', borderBottom: '1px solid #f1f5f9' }}>
+                                  <span style={{ background: `${c.seg_color || '#64748b'}12`, color: c.seg_color || '#64748b', padding: '2px 8px', borderRadius: 12, fontSize: 10, fontWeight: 700 }}>{c.segmento}</span>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {ins.clientes.length > 20 && <div style={{ textAlign: 'center', padding: 8, fontSize: 11, color: '#94a3b8' }}>... e mais {ins.clientes.length - 20}</div>}
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           )
         })}
