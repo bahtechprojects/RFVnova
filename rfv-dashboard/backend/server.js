@@ -98,6 +98,11 @@ ${error ? '<div class="err">' + error + '</div>' : ''}
 // PRIMEIRA COISA: interceptar TUDO e checar auth
 // ============================================================
 
+// Diagnóstico - verifica se o novo código está rodando
+app.get('/version', (req, res) => {
+  res.json({ version: 'v2-login-2026-04-13', auth: isAuth(req), timestamp: new Date().toISOString() });
+});
+
 // Logo é público (precisa aparecer no login)
 app.get('/logo-nova.png', (req, res) => {
   res.sendFile(path.join(publicDir, 'logo-nova.png'));
