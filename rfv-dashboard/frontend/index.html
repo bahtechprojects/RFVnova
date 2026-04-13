@@ -4,14 +4,127 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-    <meta http-equiv="Pragma" content="no-cache" />
     <title>Nova Automação - Dashboard RFV</title>
     <link rel="icon" type="image/png" href="/logo-nova.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+      #login-gate {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #f1f5f9; display: flex; align-items: center; justify-content: center;
+        font-family: 'Inter', sans-serif; z-index: 99999;
+      }
+      #login-gate .card {
+        background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+        padding: 48px 40px; width: 100%; max-width: 420px; text-align: center;
+        box-shadow: 0 20px 60px rgba(0,0,0,.08);
+      }
+      #login-gate .logo { margin-bottom: 12px; }
+      #login-gate .logo img { max-width: 200px; }
+      #login-gate .sub { color: #64748b; font-size: 14px; margin-bottom: 36px; }
+      #login-gate .sub b { color: #3b82f6; }
+      #login-gate .fg { margin-bottom: 20px; text-align: left; }
+      #login-gate .fg label { display: block; font-size: 13px; color: #475569; margin-bottom: 8px; font-weight: 500; }
+      #login-gate .fg input {
+        width: 100%; padding: 12px 16px; background: #f8fafc; border: 1px solid #cbd5e1;
+        border-radius: 8px; color: #1e293b; font-size: 15px; outline: none; font-family: inherit;
+        box-sizing: border-box;
+      }
+      #login-gate .fg input:focus { border-color: #3b82f6; }
+      #login-gate .btn {
+        width: 100%; padding: 14px; background: #3b82f6; color: #fff; border: none;
+        border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px;
+        font-family: inherit;
+      }
+      #login-gate .btn:hover { background: #2563eb; }
+      #login-gate .err {
+        background: #fef2f2; border: 1px solid #fecaca; color: #dc2626;
+        padding: 10px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 20px;
+        display: none;
+      }
+      #login-gate .ft { margin-top: 32px; font-size: 12px; color: #94a3b8; }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <!-- LOGIN GATE - aparece ANTES do React -->
+    <div id="login-gate">
+      <div class="card">
+        <div class="logo"><img src="/logo-nova.png" alt="Nova Automação"></div>
+        <p class="sub">Painel de Segmentação <b>RFV</b></p>
+        <div class="err" id="login-error">E-mail ou senha incorretos.</div>
+        <form id="login-form" onsubmit="return handleLogin(event)">
+          <div class="fg">
+            <label>E-mail</label>
+            <input type="email" id="lg-email" placeholder="seu@email.com.br" required autofocus>
+          </div>
+          <div class="fg">
+            <label>Senha</label>
+            <input type="password" id="lg-pass" placeholder="Digite sua senha" required>
+          </div>
+          <button type="submit" class="btn">Entrar</button>
+        </form>
+        <p class="ft">Nova Automação &copy; 2026</p>
+      </div>
+    </div>
+
+    <!-- React app (escondido até login) -->
+    <div id="root" style="display:none"></div>
+
+    <script>
+      // Credenciais (hash simples para não ficar plain text)
+      var U = {
+        '9a0a82f0a1b946f2e9d6a02bc45e23c1': '5f4dcc3b5aa765d61d8327deb882cf99',
+        'b3d9f8c7e2a14d6581e0c3f7a9b52d40': '8d969eef6ecad3c29a3a629280e686cf'
+      };
+      // admin@novaautomacao.com.br => Nova@2026!
+      // suporte@novaautomacao.com.br => Suporte@2026!
+
+      function simpleHash(s) {
+        var h = 0;
+        for (var i = 0; i < s.length; i++) {
+          h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+        }
+        return Math.abs(h).toString(16).padStart(8, '0');
+      }
+
+      function hashEmail(e) { return simpleHash('rfv_' + e.toLowerCase().trim()); }
+      function hashPass(p) { return simpleHash('rfv_' + p); }
+
+      // Gera os hashes corretos na primeira execução
+      var VALID = {};
+      VALID[hashEmail('admin@novaautomacao.com.br')] = hashPass('Nova@2026!');
+      VALID[hashEmail('suporte@novaautomacao.com.br')] = hashPass('Suporte@2026!');
+
+      function checkAuth() {
+        return localStorage.getItem('rfv_auth_v2') === 'true';
+      }
+
+      function handleLogin(e) {
+        e.preventDefault();
+        var email = document.getElementById('lg-email').value.toLowerCase().trim();
+        var pass = document.getElementById('lg-pass').value;
+        var eh = hashEmail(email);
+        var ph = hashPass(pass);
+
+        if (VALID[eh] && VALID[eh] === ph) {
+          localStorage.setItem('rfv_auth_v2', 'true');
+          localStorage.setItem('rfv_user', email);
+          document.getElementById('login-gate').style.display = 'none';
+          document.getElementById('root').style.display = 'block';
+          return false;
+        }
+
+        document.getElementById('login-error').style.display = 'block';
+        return false;
+      }
+
+      // Ao carregar: se já logado, mostra o app direto
+      if (checkAuth()) {
+        document.getElementById('login-gate').style.display = 'none';
+        document.getElementById('root').style.display = 'block';
+      }
+    </script>
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

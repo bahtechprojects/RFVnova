@@ -116,7 +116,8 @@ export default function Sidebar({ active, onChange, empresaNome, onLogout }) {
         gap: 10
       }}>
         <a
-            href="/logout"
+            href="#"
+            onClick={(e) => { e.preventDefault(); localStorage.removeItem('rfv_auth_v2'); localStorage.removeItem('rfv_user'); window.location.reload(); }}
             style={{
               display: 'flex',
               alignItems: 'center',
