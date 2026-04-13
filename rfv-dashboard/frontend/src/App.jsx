@@ -8,6 +8,11 @@ export default function App() {
     () => sessionStorage.getItem('rfv_logged_in') === 'true'
   )
 
+  const handleLogout = () => {
+    sessionStorage.clear()
+    setLoggedIn(false)
+  }
+
   if (!loggedIn) {
     return <Login onLogin={() => setLoggedIn(true)} />
   }
@@ -15,7 +20,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/dashboard/nova-automacao" replace />} />
-      <Route path="/dashboard/:empresaId" element={<Dashboard />} />
+      <Route path="/dashboard/:empresaId" element={<Dashboard onLogout={handleLogout} />} />
     </Routes>
   )
 }

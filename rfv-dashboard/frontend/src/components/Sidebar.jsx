@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { ChartBar, ChartPie, Lightbulb, UsersThree, GridFour, Heartbeat, ClipboardText } from '@phosphor-icons/react'
+import { ChartBar, ChartPie, Lightbulb, UsersThree, GridFour, Heartbeat, ClipboardText, SignOut } from '@phosphor-icons/react'
 
 const menuItems = [
   { id: 'visao', label: 'Visão Geral', icon: ChartBar },
@@ -11,7 +11,7 @@ const menuItems = [
   { id: 'clientes', label: 'Clientes', icon: UsersThree },
 ]
 
-export default function Sidebar({ active, onChange, empresaNome }) {
+export default function Sidebar({ active, onChange, empresaNome, onLogout }) {
   return (
     <div style={{
       width: 240,
@@ -109,10 +109,40 @@ export default function Sidebar({ active, onChange, empresaNome }) {
 
       {/* Footer */}
       <div style={{
-        padding: '14px 18px',
-        borderTop: '1px solid #e2e8f0'
+        padding: '14px 10px',
+        borderTop: '1px solid #e2e8f0',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 10
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {onLogout && (
+          <button
+            onClick={onLogout}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              padding: '10px 14px',
+              borderRadius: 10,
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 500,
+              fontFamily: 'Inter',
+              color: '#dc2626',
+              background: 'transparent',
+              width: '100%',
+              textAlign: 'left',
+              transition: 'background 0.15s'
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = '#fef2f2'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            <SignOut size={18} weight="regular" color="#dc2626" />
+            Sair
+          </button>
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 4px' }}>
           <img
             src="/logo-bahtech.png"
             alt="Bahtech"

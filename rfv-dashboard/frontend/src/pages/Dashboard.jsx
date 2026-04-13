@@ -21,7 +21,7 @@ const pageTitles = {
   clientes: { title: 'Clientes', subtitle: 'Detalhamento individual de todos os clientes' },
 }
 
-export default function Dashboard() {
+export default function Dashboard({ onLogout }) {
   const { empresaId } = useParams()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -74,6 +74,7 @@ export default function Dashboard() {
         active={activePage}
         onChange={setActivePage}
         empresaNome={data.empresa_nome}
+        onLogout={onLogout}
       />
 
       <main style={{
